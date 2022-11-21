@@ -39,7 +39,6 @@ def connection(query, getResult=True):
 def Encrypt(p):
     # Got the bcrypt idea from this youtube video https://www.youtube.com/watch?v=CSHx6eCkmv0
     passwd = bytes(p, encoding='UTF-8')
-
     salt = bcrypt.gensalt()  # this generates a random string to be appended to the end of password and hashpw will hash both of these strings
     hashed = bcrypt.hashpw(passwd, salt)
     hashed = hashed.decode(encoding='UTF-8')
@@ -48,15 +47,39 @@ def Encrypt(p):
 
 def check_password(password, email):
     passwd = bytes(password, encoding='UTF-8')
-    print(passwd)
     hashed = connection(f"select password from customer where email = '{email}'", getResult=True)
-    print(hashed)
     hashed = bytes(hashed[0][0], encoding='UTF-8')
-    print(hashed)
     if bcrypt.checkpw(passwd, hashed):  # checkpw will decrypt it and then return
         return True
     else:
         return False
+
+def spaces_start_end(string): #removes spaces at the start or end of string
+    for count, letter in enumerate(string):
+        if letter == ' ':
+            continue
+        else:
+            string = string[count:]
+            break
+    count = 0
+    for letter in string[::-1]:
+        if letter == ' ':
+            count = count - 1
+        else:
+            if count == 0:
+                break
+            string = string[:count]
+            break
+    return string
+
+
+def spaces_mid(string): #first use spaces_start_end to remove any spaces at the start or beginning of string
+    result = False
+    for letter in string:
+        if letter == ' ':
+            result = True
+            break
+    return result
 
 
 def allowed_image_file(filename):
@@ -197,16 +220,19 @@ def createaccount():
         last_name = request.form["last-name"]
         age = request.form["age"]
         email = request.form["email"]
+        email = spaces_start_end(email)
         password = request.form["psw"]
         new_password_1 = request.form["psw-repeat"]
         gender = request.form['gender']
 
-        if new_password_1 == password:
+        if not isinstance(age, int):
+            flash('Invalid age. Insert digits only, please.')
+        if spaces_mid(email):
+            flash('There are space(s) in your email address')
+        elif new_password_1 == password:
             encripted_pw = Encrypt(new_password_1)
             email_already_exists = connection(f"select * from customer where email = '{email}'", getResult=True)
-            print(email_already_exists)
             if not email_already_exists:
-                print('create account')
                 connection(
                     f"insert into customer(first_name, last_name, password, age, email, gender) values('{first_name}', '{last_name}', '{encripted_pw}', '{age}', '{email}','{gender}')",
                     getResult=False)
@@ -228,6 +254,7 @@ def createaccount():
 def forgot():
     if request.method == "POST":
         user_email = request.form["enter email"]
+        user_email = spaces_start_end(user_email)
         password_forgot = request.form["new password"]
         repeat_new_pw = request.form["repeat new password"]
         check_email_exists = connection(f"select email from customer where email = '{user_email}'", getResult=True)
@@ -328,6 +355,7 @@ def login():
     if request.method == "POST":
 
         email = request.form["email_1"]
+        email = spaces_start_end(email)
         pw = request.form["psw_1"]
 
         if "sign_in" in request.form:
@@ -364,6 +392,7 @@ def settings():
 
         print(request.form)
         enter_email = request.form["enter email"]
+        enter_email = spaces_start_end(enter_email)
         current_password = request.form["current password"]
         new_pw = request.form["enter new password"]
         repeat = request.form["repeat new password"]

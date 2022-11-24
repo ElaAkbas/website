@@ -146,35 +146,7 @@ def allowed_sound_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def split_sorted(dir_list): #to find maximum integer in folder
-    copy_dir = dir_list[:]
-    for i in range(len(copy_dir)):
-        for j in range(len(copy_dir[i][::-1])):
-            if copy_dir[i][::-1][j] == '.':
-                copy_dir[i] = int(copy_dir[i][:-j-1])
-                break
-    return sorted(copy_dir)
 
-def split_into_dict(dir_list): #store filename with corresponding extension
-    dictionary = {}
-    for i in range(len(dir_list)):
-        for j in range(len(dir_list[i])):
-            if dir_list[i][::-1][j] == '.':
-                full = dir_list[i]
-                filename = dir_list[i][:-j-1]
-                extension = full.replace(filename, '')
-                key = int(dir_list[i][:-j - 1])
-                dictionary[key] = extension
-                break
-    return dictionary
-
-def get_image(dir_list, index): #to combine found image name (=integer) with corresponding extension
-    img_dir_dict = split_into_dict(dir_list)
-    integer_list = split_sorted(dir_list)
-    image_int = integer_list[index]
-    image_extension = img_dir_dict[image_int]
-    full_filename = str(image_int) + image_extension
-    return full_filename
 
 @app.route('/testing', methods=['GET', 'POST'])
 def index():
@@ -212,7 +184,7 @@ def upload():
                     # new_im.paste(img, ((desired_size - new_size[0]) // 2, (desired_size - new_size[1]) // 2))
                     # new_im.save(img_path)
                     # prediction = predict(img_path) #do we use img_path or image.filename?
-                    # flash('Predicted class: ', prediction) #delete next line of flash msg when uncommenting this one
+                    # use prediction variable as text in html
                     flash('Your image is successfully uploaded')
                 else:
                     flash('Please upload an image with the file extension png, jpg or jpeg')
@@ -225,7 +197,7 @@ def upload():
                     sound_path = os.path.join(sound_folder_path, secure_filename(sound.filename))
                     sound.save(sound_path)
                     # prediction = predict(sound_path)
-                    # flash('Predicted class: ', prediction)
+                    # use prediction variable as text in html
                     flash('Your sound file is successfully uploaded')
                 else:
                     flash('Please upload a sound file with the file extension wav')
